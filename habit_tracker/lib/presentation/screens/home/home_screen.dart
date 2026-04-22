@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../menu/menu_drawer.dart';
 import '../settings/settings_screen.dart';
+import 'detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,14 +14,28 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   String _welcomeMessage = 'Welcome back!';
-  int _completedTasks = 3;
-  int _totalTasks = 5;
-  double _progressPercent = 0.6;
+  String _userName = 'User';
+
+  // Sample data for habits
+  final List<Map<String, dynamic>> _todoHabits = [
+    {'title': 'Morning Exercise', 'subtitle': 'Health', 'duration': '30 min', 'completed': false},
+    {'title': 'Read 10 pages', 'subtitle': 'Learning', 'duration': '15 min', 'completed': false},
+    {'title': 'Meditate 5 min', 'subtitle': 'Wellness', 'duration': '5 min', 'completed': false},
+    {'title': 'Drink 8 glasses water', 'subtitle': 'Health', 'duration': 'All day', 'completed': false},
+    {'title': 'Journaling', 'subtitle': 'Mindfulness', 'duration': '10 min', 'completed': false},
+  ];
+
+  final List<Map<String, dynamic>> _doneHabits = [
+    {'title': 'Wake up early', 'subtitle': 'Health', 'duration': '6:00 AM', 'completed': true},
+    {'title': 'Healthy breakfast', 'subtitle': 'Nutrition', 'duration': '15 min', 'completed': true},
+    {'title': 'Walk 10,000 steps', 'subtitle': 'Fitness', 'duration': '60 min', 'completed': true},
+  ];
 
   @override
   void initState() {
     super.initState();
     _setWelcomeMessage();
+    _loadUserData();
   }
 
   void _setWelcomeMessage() {
@@ -34,10 +49,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadUserData() async {
+    // Load user name from local storage
+    setState(() {
+      _userName = 'Ric'; // Default name
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+      // Task 2: Top Navigation Bar
       appBar: AppBar(
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
@@ -67,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: const MenuDrawer(),
+      // Task 2: Gradient background
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -80,8 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Task 2: Welcome Section
               Text(
-                _welcomeMessage,
+                'Hello, $_userName!',
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -89,145 +114,142 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Keep up the great work!',
+                'Use the + button to create some habits!',
                 style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
-              // Progress card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade200,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Today's Progress",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Circular progress
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                value: _progressPercent,
-                                strokeWidth: 8,
-                                backgroundColor: Colors.grey.shade200,
-                                color: Colors.blue.shade700,
-                              ),
-                              Text(
-                                '${(_progressPercent * 100).toInt()}%',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Task count
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$_completedTasks of $_totalTasks',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Text(
-                              'tasks completed',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              
+              // Task 3: Content Sections - To Do
+              _buildSectionHeader('To Do'),
+              const SizedBox(height: 12),
+              ..._todoHabits.map((habit) => _buildHabitCard(habit)),
+              
               const SizedBox(height: 24),
-              // Tasks section
-              const Text(
-                'Recent Tasks',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildTaskItem('Morning Exercise', true),
-              _buildTaskItem('Read 10 pages', true),
-              _buildTaskItem('Meditate 5 min', false),
-              _buildTaskItem('Drink 8 glasses water', false),
-              _buildTaskItem('Journaling', false),
+              
+              // Task 3: Content Sections - Done
+              _buildSectionHeader('Done'),
+              const SizedBox(height: 12),
+              ..._doneHabits.map((habit) => _buildHabitCard(habit)),
             ],
           ),
         ),
       ),
+      // Task 2: Floating Action Button
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue.shade700,
         onPressed: () {
-          // Add new task
+          // Add new habit action
         },
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildTaskItem(String title, bool isCompleted) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade100,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
       ),
-      child: Row(
-        children: [
-          Icon(
-            isCompleted ? Icons.check_circle : Icons.circle_outlined,
-            color: isCompleted ? Colors.green : Colors.grey,
+    );
+  }
+
+  // Task 3: Content Cards
+  Widget _buildHabitCard(Map<String, dynamic> habit) {
+    return GestureDetector(
+      onTap: () {
+        // Task 4: Navigate to detail screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailScreen(habitData: habit),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                decoration: isCompleted ? TextDecoration.lineThrough : null,
-                color: isCompleted ? Colors.grey : Colors.black,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Task 3: Thumbnail/Image
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                habit['completed'] ? Icons.check_circle : Icons.circle_outlined,
+                color: habit['completed'] ? Colors.green : Colors.blue.shade700,
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            // Task 3: Title, Subtitle, Duration
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit['title'],
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      decoration: habit['completed'] 
+                          ? TextDecoration.lineThrough 
+                          : null,
+                    ),
+                  ),
+                  Text(
+                    habit['subtitle'],
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            // Task 3: Duration
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  habit['duration'],
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                // Task 3: Action Icons
+                IconButton(
+                  icon: Icon(
+                    habit['completed'] 
+                        ? Icons.check_circle 
+                        : Icons.circle_outlined,
+                    color: habit['completed'] 
+                        ? Colors.green 
+                        : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      habit['completed'] = !habit['completed'];
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
