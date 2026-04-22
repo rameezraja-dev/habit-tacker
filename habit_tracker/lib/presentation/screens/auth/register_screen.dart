@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -10,56 +10,55 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
-  double _age = 25; // Default age set to 25
-  String _country = 'United States';
-  List<String> _countries = [];
-  List<String> selectedHabits = [];
-  List<String> availableHabits = [
-    'Wake Up Early',
-    'Workout',
-    'Drink Water',
-    'Meditate',
-    'Read a Book',
-    'Practice Gratitude',
-    'Sleep 8 Hours',
-    'Eat Healthy',
-    'Journal',
-    'Walk 10,000 Steps'
-  ];
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _errorMessage;
+
+  // Step 2: Form Validation
+  bool validateForm() {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      return false;
+    }
+    if (!_emailController.text.contains('@')) {
+      return false;
+    }
+    return true;
+  }
+
+  // Step 3: Store User Data in Local Storage
+  Future<void> saveUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', _usernameController.text);
+    await prefs.setString('email', _emailController.text);
+    await prefs.setString('password', _passwordController.text);
+  }
+
+  // Step 4: Implement Sign-Up Logic
+  void _register() async {
+    if (validateForm()) {
+      await saveUserData();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'All fields are required and email must be valid';
+      });
+    }
+  }
 
   @override
-  void initState() {
-    super.initState();
-    _fetchCountries();
-  }
-
-  Future<void> _fetchCountries() async {
-    List<String> subsetCountries = [
-      'United States',
-      'Canada',
-      'United Kingdom',
-      'Australia',
-      'India',
-      'Germany',
-      'France',
-      'Japan',
-      'China',
-      'Brazil',
-      'South Africa'
-    ];
-
-    setState(() {
-      _countries = subsetCountries;
-      _countries.sort();
-      _country = _countries.isNotEmpty ? _countries[0] : 'United States';
-    });
-  }
-
-  void _register() async {
-    // dummy for now
-    print("registration logic here");
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -80,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => LoginScreen()),
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           },
         ),
@@ -95,65 +94,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildInputField(_nameController, 'Name', Icons.person),
+                // Step 1: Setup UI Components - Text Fields
+                _buildInputField(_usernameController, 'Enter your username', Icons.person),
                 const SizedBox(height: 10),
-                _buildInputField(
-                    _usernameController, 'Username', Icons.alternate_email),
+                _buildInputField(_emailController, 'Enter your email', Icons.email),
                 const SizedBox(height: 10),
-                Text('Age: ${_age.round()}',
-                    style: const TextStyle(color: Colors.white, fontSize: 18)),
-                Slider(
-                  value: _age,
-                  min: 21,
-                  max: 100,
-                  divisions: 79,
-                  activeColor: Colors.blue.shade600,
-                  inactiveColor: Colors.blue.shade300,
-                  onChanged: (double value) {
-                    setState(() {
-                      _age = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                _buildCountryDropdown(),
-                const SizedBox(height: 10),
-                const Text('Select Your Habits',
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: availableHabits.map((habit) {
-                    final isSelected = selectedHabits.contains(habit);
-                    return GestureDetector(
-                      onTap: () => null,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color:
-                              isSelected ? Colors.blue.shade600 : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.blue.shade700),
-                        ),
-                        child: Text(
-                          habit,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.blue.shade700,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                _buildInputField(_passwordController, 'Enter your password', Icons.lock, isPassword: true),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
                 const SizedBox(height: 20),
+                // Step 1: Button
                 Center(
                   child: ElevatedButton(
                     onPressed: _register,
@@ -166,13 +126,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           horizontal: 80, vertical: 15),
                     ),
                     child: const Text(
-                      'Register',
+                      'Sign Up',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Step 1: Navigation Prompt
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Already have an account?',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -184,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildInputField(
-      TextEditingController controller, String hint, IconData icon) {
+      TextEditingController controller, String hint, IconData icon, {bool isPassword = false}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -192,6 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       child: TextField(
         controller: controller,
+        obscureText: isPassword,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.blue.shade700),
           hintText: hint,
@@ -199,33 +185,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCountryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: DropdownButton<String>(
-        value: _country,
-        icon: Icon(Icons.arrow_drop_down, color: Colors.blue.shade700),
-        isExpanded: true,
-        underline: const SizedBox(),
-        items: _countries.map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-            _country = newValue!;
-          });
-        },
       ),
     );
   }

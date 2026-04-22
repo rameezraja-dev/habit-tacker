@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -9,34 +10,71 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  // Default credentials
-  final String defaultUsername = 'testuser';
-  final String defaultPassword = 'password123';
   String? _errorMessage;
 
-  void _login() {
-    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Please enter username and password';
-      });
-      return;
+  // Step 2: Validate Input
+  bool validateForm() {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      return false;
+    }
+    if (!_emailController.text.contains('@')) {
+      return false;
+    }
+    return true;
+  }
+
+  // Step 3: Verify Credentials
+  Future<bool> authenticateUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedEmail = prefs.getString('email');
+    String? storedPassword = prefs.getString('password');
+
+    if (storedEmail == null || storedPassword == null) {
+      // Default demo credentials
+      if (_emailController.text == 'demo@habitt.com' && 
+          _passwordController.text == 'demo123') {
+        return true;
+      }
+      return false;
     }
 
-    if (_usernameController.text == defaultUsername && 
-        _passwordController.text == defaultPassword) {
-      print("Login successful");
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+    if (_emailController.text == storedEmail && 
+        _passwordController.text == storedPassword) {
+      return true;
+    }
+    return false;
+  }
+
+  // Step 4: Handle Login Button Press
+  void _login() async {
+    if (validateForm()) {
+      bool isAuthenticated = await authenticateUser();
+      if (isAuthenticated) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Invalid email or password';
+        });
+      }
     } else {
       setState(() {
-        _errorMessage = 'Invalid username or password';
+        _errorMessage = 'Please enter valid email and password';
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,16 +103,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
+                // Step 1: Text Fields
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: TextField(
-                    controller: _usernameController,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.email, color: Colors.blue.shade700),
-                      hintText: 'Enter Username',
+                      hintText: 'Enter your email',
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 15),
@@ -92,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: true,
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.lock, color: Colors.blue.shade700),
-                      hintText: 'Enter Password',
+                      hintText: 'Enter your password',
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 15),
@@ -104,23 +144,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
                     ),
                   ),
                 const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // Logic for forgot password can be added here
-                    },
-                    child: const Text(
-                      'Forgot password?',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                // Step 1: Login Button
                 ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
@@ -132,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         horizontal: 80, vertical: 15),
                   ),
                   child: const Text(
-                    'Log in',
+                    'Login',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white,
@@ -141,31 +169,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'or',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RegisterScreen()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
+                // Step 1: Sign Up Navigation
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.white),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 70, vertical: 15),
-                  ),
-                  child: const Text(
-                    'Sign up',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const RegisterScreen()),
+                        );
+                      },
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -176,14 +201,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// Placeholder HomeScreen - import from actual location in your project
+// Placeholder HomeScreen
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(
+        title: const Text('Home'),
+        backgroundColor: Colors.blue.shade700,
+      ),
       body: const Center(child: Text('Welcome to Habitt!')),
     );
   }
