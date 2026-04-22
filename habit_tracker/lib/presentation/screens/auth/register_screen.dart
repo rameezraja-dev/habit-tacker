@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -9,52 +10,80 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  String? _errorMessage;
+  double _age = 25; // Default age set to 25
+  String _country = 'United States';
+  List<String> _countries = [];
+  List<String> selectedHabits = [];
+  List<String> availableHabits = [
+    'Wake Up Early',
+    'Workout',
+    'Drink Water',
+    'Meditate',
+    'Read a Book',
+    'Practice Gratitude',
+    'Sleep 8 Hours',
+    'Eat Healthy',
+    'Journal',
+    'Walk 10,000 Steps'
+  ];
 
-  void _register() {
-    if (_usernameController.text.isEmpty || 
-        _emailController.text.isEmpty || 
-        _passwordController.text.isEmpty) {
-      setState(() {
-        _errorMessage = 'Please fill in all fields';
-      });
-      return;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _fetchCountries();
+  }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        _errorMessage = 'Passwords do not match';
-      });
-      return;
-    }
+  Future<void> _fetchCountries() async {
+    List<String> subsetCountries = [
+      'United States',
+      'Canada',
+      'United Kingdom',
+      'Australia',
+      'India',
+      'Germany',
+      'France',
+      'Japan',
+      'China',
+      'Brazil',
+      'South Africa'
+    ];
 
-    if (!_emailController.text.contains('@')) {
-      setState(() {
-        _errorMessage = 'Please enter a valid email';
-      });
-      return;
-    }
+    setState(() {
+      _countries = subsetCountries;
+      _countries.sort();
+      _country = _countries.isNotEmpty ? _countries[0] : 'United States';
+    });
+  }
 
-    // Registration successful - navigate to login
-    print("Registration successful for: ${_usernameController.text}");
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
+  void _register() async {
+    // dummy for now
+    print("registration logic here");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue.shade700,
+        title: const Text(
+          'Register',
+          style: TextStyle(
+            fontSize: 32,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginScreen()),
+            );
+          },
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -66,152 +95,137 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                // Username field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.person, color: Colors.blue.shade700),
-                      hintText: 'Enter Username',
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Email field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.email, color: Colors.blue.shade700),
-                      hintText: 'Enter Email',
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Password field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.lock, color: Colors.blue.shade700),
-                      hintText: 'Enter Password',
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Confirm Password field
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: TextField(
-                    controller: _confirmPasswordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.lock_outline, color: Colors.blue.shade700),
-                      hintText: 'Confirm Password',
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                    ),
-                  ),
-                ),
-                if (_errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
-                    ),
-                  ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 80, vertical: 15),
-                  ),
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'or',
-                  style: TextStyle(color: Colors.white70),
+                _buildInputField(_nameController, 'Name', Icons.person),
+                const SizedBox(height: 10),
+                _buildInputField(
+                    _usernameController, 'Username', Icons.alternate_email),
+                const SizedBox(height: 10),
+                Text('Age: ${_age.round()}',
+                    style: const TextStyle(color: Colors.white, fontSize: 18)),
+                Slider(
+                  value: _age,
+                  min: 21,
+                  max: 100,
+                  divisions: 79,
+                  activeColor: Colors.blue.shade600,
+                  inactiveColor: Colors.blue.shade300,
+                  onChanged: (double value) {
+                    setState(() {
+                      _age = value;
+                    });
+                  },
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
+                _buildCountryDropdown(),
+                const SizedBox(height: 10),
+                const Text('Select Your Habits',
+                    style: TextStyle(color: Colors.white, fontSize: 18)),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: availableHabits.map((habit) {
+                    final isSelected = selectedHabits.contains(habit);
+                    return GestureDetector(
+                      onTap: () => null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected ? Colors.blue.shade600 : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.blue.shade700),
+                        ),
+                        child: Text(
+                          habit,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
                     );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 80, vertical: 15),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 70, vertical: 15),
-                  ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    child: const Text(
+                      'Register',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(
+      TextEditingController controller, String hint, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.blue.shade700),
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountryDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: DropdownButton<String>(
+        value: _country,
+        icon: Icon(Icons.arrow_drop_down, color: Colors.blue.shade700),
+        isExpanded: true,
+        underline: const SizedBox(),
+        items: _countries.map((String value) {
+          return DropdownMenuItem<String>(
+            value: value,
+            child: Text(value),
+          );
+        }).toList(),
+        onChanged: (newValue) {
+          setState(() {
+            _country = newValue!;
+          });
+        },
       ),
     );
   }

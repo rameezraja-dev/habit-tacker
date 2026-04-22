@@ -23,7 +23,7 @@ class MenuDrawer extends StatelessWidget {
                 end: Alignment.bottomCenter,
               ),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

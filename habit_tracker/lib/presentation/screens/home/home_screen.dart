@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../menu/menu_drawer.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -228,19 +229,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// Placeholder - import from actual location
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: const Center(child: Text('Settings Page')),
     );
   }
 }
