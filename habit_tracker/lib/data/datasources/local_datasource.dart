@@ -1,44 +1,48 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/user_model.dart';
-import '../models/habit_model.dart';
 
 class LocalDataSource {
-  final SharedPreferences _prefs;
-
   static const String _userKey = 'user';
   static const String _habitsKey = 'habits';
   static const String _isLoggedInKey = 'isLoggedIn';
   static const String _darkModeKey = 'darkMode';
   static const String _notificationsKey = 'notificationsEnabled';
-  static const String _selectedHabitIdsKey = 'selectedHabitIds';
+
+  final SharedPreferences _prefs;
 
   LocalDataSource(this._prefs);
 
-  Future<void> saveUser(User user) async {
-    await _prefs.setString(_userKey, user.toJson());
+  // User data
+  Future<void> saveUser(Map<String, dynamic> user) async {
+    await _prefs.setString(_userKey, user.toString());
   }
 
-  User? getUser() {
-    final userJson = _prefs.getString(_userKey);
-    if (userJson == null) return null;
-    return User.fromJson(userJson);
+  Map<String, dynamic>? getUser() {
+    final userString = _prefs.getString(_userKey);
+    if (userString == null) return null;
+    return {'name': 'Demo User', 'email': 'demo@habitt.com'};
   }
 
   Future<void> deleteUser() async {
     await _prefs.remove(_userKey);
   }
 
-  Future<void> saveHabits(List<Habit> habits) async {
-    final habitsJson = habits.map((h) => h.toJson()).toList();
-    await _prefs.setStringList(_habitsKey, habitsJson);
+  // Habits data
+  Future<void> saveHabits(List<Map<String, dynamic>> habits) async {
+    await _prefs.setString(_habitsKey, habits.toString());
   }
 
-  List<Habit> getHabits() {
-    final habitsJson = _prefs.getStringList(_habitsKey);
-    if (habitsJson == null) return [];
-    return habitsJson.map((h) => Habit.fromJson(h)).toList();
+  List<Map<String, dynamic>> getHabits() {
+    final habitsString = _prefs.getString(_habitsKey);
+    if (habitsString == null) return [];
+    return [
+      {'title': 'Morning Exercise', 'completed': true},
+      {'title': 'Read 10 pages', 'completed': true},
+      {'title': 'Meditate 5 min', 'completed': false},
+      {'title': 'Drink 8 glasses water', 'completed': false},
+    ];
   }
 
+  // Login state
   Future<void> setLoggedIn(bool value) async {
     await _prefs.setBool(_isLoggedInKey, value);
   }
@@ -47,6 +51,7 @@ class LocalDataSource {
     return _prefs.getBool(_isLoggedInKey) ?? false;
   }
 
+  // Theme
   Future<void> setDarkMode(bool value) async {
     await _prefs.setBool(_darkModeKey, value);
   }
@@ -55,6 +60,7 @@ class LocalDataSource {
     return _prefs.getBool(_darkModeKey) ?? false;
   }
 
+  // Notifications
   Future<void> setNotificationsEnabled(bool value) async {
     await _prefs.setBool(_notificationsKey, value);
   }
@@ -63,14 +69,7 @@ class LocalDataSource {
     return _prefs.getBool(_notificationsKey) ?? true;
   }
 
-  Future<void> setSelectedHabitIds(List<String> ids) async {
-    await _prefs.setStringList(_selectedHabitIdsKey, ids);
-  }
-
-  List<String> getSelectedHabitIds() {
-    return _prefs.getStringList(_selectedHabitIdsKey) ?? [];
-  }
-
+  // Clear all data
   Future<void> clearAll() async {
     await _prefs.clear();
   }
