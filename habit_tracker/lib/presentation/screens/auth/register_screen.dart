@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,40 +11,50 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
-  final _ageController = TextEditingController();
-  String _selectedCountry = AppConstants.defaultCountries.first;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _nameController.dispose();
     _usernameController.dispose();
-    _ageController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = null;
+      });
+
+      if (_passwordController.text != _confirmPasswordController.text) {
+        setState(() {
+          _errorMessage = 'Passwords do not match';
+        });
+        return;
+      }
+
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.register(
-        name: _nameController.text.trim(),
-        username: _usernameController.text.trim(),
-        age: int.parse(_ageController.text.trim()),
-        country: _selectedCountry,
+        name: _usernameController.text.trim(),
+        username: _emailController.text.trim(),
+        age: 25,
+        country: 'United States',
       );
       
       if (success && mounted) {
         Navigator.pop(context);
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.error ?? 'Registration failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _errorMessage = authProvider.error ?? 'Registration failed';
+        });
       }
     }
   }
@@ -66,24 +75,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Name is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
                   controller: _usernameController,
                   decoration: const InputDecoration(
                     labelText: 'Username',
-                    prefixIcon: Icon(Icons.alternate_email),
+                    prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -94,42 +89,83 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _ageController,
-                  keyboardType: TextInputType.number,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'Age',
-                    prefixIcon: Icon(Icons.cake),
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Age is required';
+                      return 'Email is required';
                     }
-                    final age = int.tryParse(value);
-                    if (age == null || age < 13 || age > 120) {
-                      return 'Age must be between 13 and 120';
+                    if (!value.contains('@')) {
+                      return 'Please enter a valid email';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedCountry,
-                  decoration: const InputDecoration(
-                    labelText: 'Country',
-                    prefixIcon: Icon(Icons.public),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  items: AppConstants.defaultCountries.map((country) {
-                    return DropdownMenuItem(
-                      value: country,
-                      child: Text(country),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCountry = value!;
-                    });
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Password is required';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
                   },
                 ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    return null;
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
                 const SizedBox(height: 24),
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) {
@@ -144,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('Create Account'),
+                          : const Text('Sign Up'),
                     );
                   },
                 ),
@@ -157,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text('Log in'),
+                      child: const Text('Login'),
                     ),
                   ],
                 ),

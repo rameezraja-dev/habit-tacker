@@ -12,33 +12,35 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _errorMessage = null;
+      });
+      
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.login(
-        username: _usernameController.text.trim(),
+        username: _emailController.text.trim(),
         password: _passwordController.text,
       );
       
       if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.error ?? 'Login failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _errorMessage = authProvider.error ?? 'Invalid email or password';
+        });
       }
     }
   }
@@ -70,14 +72,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 48),
                 TextFormField(
-                  controller: _usernameController,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: Icon(Icons.person_outline),
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Username is required';
+                      return 'Email is required';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Please enter a valid email';
                     }
                     return null;
                   },
@@ -121,6 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('Remember me'),
                   ],
                 ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
                 const SizedBox(height: 24),
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) {
@@ -153,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text('Register'),
+                      child: const Text('Sign Up'),
                     ),
                   ],
                 ),
